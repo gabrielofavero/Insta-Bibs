@@ -66,9 +66,19 @@ function getFollowObject(file, callback) {
 }
 
 function getBlackListArray(file, callback) {
-    fs.readFile(file, 'utf8', (err, data) => {
+    let result = [];
+    fs.readFile(file, 'utf-8', (err, fileData) => {
         if (err) throw err;
-        callback(data);
+        let lines = fileData.split('\n');
+        lines.forEach(line => {
+            let splitURL = line.split(instagramURL);
+            if (splitURL.length > 1) {
+                result.push(splitURL[1].trim());
+            } else {
+                result.push(line.trim());
+            }
+        });
+        callback(result);
     });
 }
 
@@ -140,11 +150,11 @@ function compareObjects(obj1, obj2) {
 }
 
 async function followMenu(data, followData, followType){
-    let size = Object.keys(followMenu).length;
+    let size = Object.keys(followData).length;
     console.log(GREEN, "\n" + followType);
     console.log(GREY, size + " Usuários\n");
-    console.log("1 - " + COMPLETE);
-    console.log("2 - " + FILTERED);
+    console.log("1 - " + FILTERED);
+    console.log("2 - " + COMPLETE);
     console.log("0 - Voltar\n");
     let userInput = await getUserInput();
     switch (userInput) {
@@ -153,11 +163,11 @@ async function followMenu(data, followData, followType){
             mainMenu(data);
             break;
         case "1":
-            showList(data, followData, followType, COMPLETE);
-            break;
-        case "2":
             showList(data, followData, followType, FILTERED);
-            break;   
+            break;  
+        case "2":
+            showList(data, followData, followType, COMPLETE);
+            break; 
         default:
             console.log(RED, "\nOpção inválida");
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -178,7 +188,7 @@ async function showList(data, obj, followType, listType, completeOnly=false) {
         mainMenu(data);
     } else {
         let arr = [];
-        let complementTitle = completeOnly ? "" : " - " + followType;
+        let complementTitle = completeOnly ? "" : " - " + oppositeList;
         console.log(GREEN, "\n" + followType + complementTitle);
         for (let key in obj) {
             if (!blacklistCheck || !data.blackList.includes(key)) {
