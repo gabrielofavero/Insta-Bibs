@@ -3,7 +3,8 @@ const fs = require('fs');
 const seguidoresFile = './data/Seguidores.txt';
 const seguindoFile = './data/Seguindo.txt';
 const blackListFile = './data/Blacklist.txt';
-const ignoreLines = ["·", "Seguir", "Remover", "Seguindo", 'Verificado']
+const ignoreLines = ["·", "Seguir", "Remover", "Seguindo", 'Verificado', "Seguidores"]
+const separator = "Foto do perfil de";
 const instagramURL = 'https://www.instagram.com/';
 
 const GREY = "\x1b[90m%s\x1b[0m";
@@ -40,24 +41,29 @@ function getFollowObject(file, callback) {
     let result = {};
     let key = '';
     let val = '';
+    let populateCount = 0;
     fs.readFile(file, 'utf8', (err, data) => {
         if (err) throw err;
         data.split('\n').forEach(line => {
-            if (line.trim() == ''){
-                if (key && !val){
-                    result[key] = key;
-                    key = '';
-                }
+            let clearLine = line.trim().replace("/r", "");
+            if (clearLine.includes(separator)){
+                populateCount = 1;
             } else {
-                if (!ignoreLines.includes(line.trim())) {
-                    if (!key){
-                        key = line.trim();
-                    } else {
-                        val = line.trim();
-                        result[key] = val;
+                switch (populateCount) {
+                    case 1:
+                        key = clearLine;
+                        populateCount = 2;
+                        break;
+                    case 2:
+                        if (!ignoreLines.includes(clearLine) && clearLine != '') {
+                            val = clearLine;
+                            result[key] = val;
+                        } else {
+                            result[key] = key;
+                        }
                         key = '';
                         val = '';
-                    }
+                        populateCount = 0;
                 }
             }
         });
@@ -98,6 +104,7 @@ function getUserInput() {
 }
 
 async function mainMenu(data) {
+    console.clear();
     let seguidoresSize = Object.keys(data.seguidores).length;
     let seguindoSize = Object.keys(data.seguindo).length;
     let followData;
@@ -114,6 +121,7 @@ async function mainMenu(data) {
         switch (userInput) {
             case "0":
             case "":
+                console.clear();
                 process.exit();
             case "1":
                 followData = compareObjects(data.seguindo, data.seguidores);
@@ -150,6 +158,7 @@ function compareObjects(obj1, obj2) {
 }
 
 async function followMenu(data, followData, followType){
+    console.clear();
     let size = Object.keys(followData).length;
     console.log(GREEN, "\n" + followType);
     console.log(GREY, size + " Usuários\n");
@@ -176,6 +185,7 @@ async function followMenu(data, followData, followType){
 }
 
 async function showList(data, obj, followType, listType, completeOnly=false) {
+    console.clear();
     let blacklistCheck = false;
     let oppositeList = FILTERED;
     if (listType == FILTERED) {
