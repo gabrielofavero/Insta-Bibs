@@ -1,10 +1,8 @@
 const fs = require('fs');
 
-const seguidoresFile = './data/Seguidores.txt';
-const seguindoFile = './data/Seguindo.txt';
+const seguidoresFile = './data/filtered/Seguidores.txt';
+const seguindoFile = './data/filtered/Seguindo.txt';
 const blackListFile = './data/Blacklist.txt';
-const ignoreLines = ["·", "Seguir", "Remover", "Seguindo", 'Verificado', "Seguidores"]
-const separator = "Foto do perfil de";
 const instagramURL = 'https://www.instagram.com/';
 
 const GREY = "\x1b[90m%s\x1b[0m";
@@ -40,31 +38,15 @@ function main() {
 function getFollowObject(file, callback) {
     let result = {};
     let key = '';
-    let val = '';
-    let populateCount = 0;
     fs.readFile(file, 'utf8', (err, data) => {
         if (err) throw err;
         data.split('\n').forEach(line => {
             let clearLine = line.trim().replace("/r", "");
-            if (clearLine.includes(separator)){
-                populateCount = 1;
+            if (!key){
+                key = clearLine;
             } else {
-                switch (populateCount) {
-                    case 1:
-                        key = clearLine;
-                        populateCount = 2;
-                        break;
-                    case 2:
-                        if (!ignoreLines.includes(clearLine) && clearLine != '') {
-                            val = clearLine;
-                            result[key] = val;
-                        } else {
-                            result[key] = key;
-                        }
-                        key = '';
-                        val = '';
-                        populateCount = 0;
-                }
+                result[key] = clearLine;
+                key = '';
             }
         });
         callback(result);
